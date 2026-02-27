@@ -1,0 +1,18 @@
+int lowThreshold  = 50
+int highThreshold = 80
+int startingServers = 65
+
+int rest = 10
+genRange = 107.115.5.74, 107.115.5.75
+requestGenProb = 30;
+minRequestTime = 1
+maxRequestTime = 10
+
+range = 107.115.5.73, 107.115.5.74
+maxPing = 20
+pingWindow = 50
+blockDuration = 100
+
+logFile = events.log
+
+clockPeriod = 0;

@@ -1,11 +1,6 @@
 #include "Server.h"
 
-Server::Server(JobType type) : type(type), idle(true) {
-    this->current_request.id = -1;
-    this->current_request.inIP = "";
-    this->current_request.outIP = "";
-    this->current_request.time = 0;
-    this->current_request.type = type; 
+Server::Server(JobType type) : type(type), idle(true), current_request() {
 }
 
 bool Server::isIdle(){
@@ -20,7 +15,6 @@ bool Server::assign(const Request& request){
     if (this->type != request.type){
         return false; 
     }
-    this->current_request.id = request.id;
     this->current_request.inIP = request.inIP;
     this->current_request.outIP = request.outIP;
     this->current_request.time = request.time;

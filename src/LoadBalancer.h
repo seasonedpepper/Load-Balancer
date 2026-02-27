@@ -10,7 +10,10 @@
 #include<iostream>
 #include<set>
 #include <utility>
-#include<sstream>;
+#include <random>
+#include<sstream>
+#include <thread>
+#include <chrono>
 
 
 struct LBConfig {
@@ -21,8 +24,8 @@ struct LBConfig {
 
     //request generator 
     int rest = 10;
-    std::set<std::string> genRange = {"107.115.5.74", "107.115.5.75"};
-    double requestGenProb = 0.30;
+    std::vector<std::string> genRange = {"107.115.5.74", "107.115.5.75"};
+    int requestGenProb = 30;
     int minRequestTime = 1;
     int maxRequestTime = 10;
 
@@ -36,7 +39,7 @@ struct LBConfig {
     std::string logFile = "events.log";
 
     //time 
-    int clockPeriod = 1; 
+    int clockPeriod = 0; 
 };
 
 struct LBStats {
@@ -53,10 +56,12 @@ class LoadBalancer{
         LoadBalancer(int id, JobType type);
         bool sendRequestLB(Request req);
         bool recieveRequest(Request& req);
-        int tick();
+        int tick(std::vector<LoadBalancer> LBs);
         void setClock(int time); 
-        int addServer(Server& ser); 
-        int deleteServer(int id);
+        int getTime();
+        int addServer(const Server& ser); 
+        int deleteServer();
+        LBConfig getConfig(); 
 
         LBStats getStats();
         int queueSize();

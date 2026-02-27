@@ -31,20 +31,24 @@ bool LoadBalancer::recieveRequest(Request& req){
     return true; 
 }
 
-int LoadBalancer::tick(){
+int LoadBalancer::tick(std::vector<LoadBalancer> LBs){
     ++(this->time); 
-    for(int i = 0; i < servers.size() ; ++i){
-        if (!servers[i].isIdle()){
-            if(servers[i].decrementRequest()){
-                logEvent(type + " request completed!");
-                ++stats.completed;
-                ++numIdle; 
+    for (int lb = 0; lb < LBs.size(); ++lb){
+        ++(LBs[lb].time); 
+        for(int i = 0; i < LBs[lb].servers.size() ; ++i){
+            if (!LBs[lb].servers[i].isIdle()){
+                if(LBs[lb].servers[i].decrementRequest()){
+                    logEvent(type + " request completed!");
+                    ++LBs[lb].stats.completed;
+                    ++LBs[lb].numIdle; 
+                }
             }
         }
     }
     for (auto& [key, val]: banned ){
         --val; 
     }
+    std::this_thread::sleep_for(std::chrono::milliseconds(config.clockPeriod));
     return time; 
 }
 
@@ -52,7 +56,11 @@ void LoadBalancer::setClock(int time){
     this->time = time; 
 }
 
-int LoadBalancer::addServer(Server& ser){
+int LoadBalancer::getTime(){
+    return time; 
+}
+
+int LoadBalancer::addServer(const Server& ser){
     servers.push_back(ser);
     ++numIdle; 
     ++stats.scaleUps;
@@ -63,7 +71,7 @@ int LoadBalancer::addServer(Server& ser){
     return servers.size();
 }
 
-int LoadBalancer::deleteServer(int id){
+int LoadBalancer::deleteServer(){
     for(int i = servers.size() - 1; i >=0; --i){
         if(servers[i].isIdle()){
             servers.erase(servers.begin() + i);
@@ -85,6 +93,10 @@ int LoadBalancer::serverCount(){
 
 int LoadBalancer::getNumIdle(){
     return numIdle; 
+}
+
+LBConfig LoadBalancer::getConfig(){
+    return config; 
 }
 
 LBStats LoadBalancer::getStats(){
@@ -138,7 +150,7 @@ bool LoadBalancer::firewall(Request& req){
 }
 
 
-std::set<std::string> parseIpList(std::string& str) {
+std::set<std::string> parseIpListS(std::string& str) {
     std::set<std::string> out;
     std::stringstream ss(str);
     std::string item;
@@ -148,7 +160,16 @@ std::set<std::string> parseIpList(std::string& str) {
     }
     return out;
 };
+std::vector<std::string> parseIpListV(std::string& str) {
+    std::vector<std::string> out;
+    std::stringstream ss(str);
+    std::string item;
 
+    while (std::getline(ss, item, ',')) {
+        if (!item.empty()) out.push_back(item);
+    }
+    return out;
+};
 void trim(std::string& s) {
     auto notSpace = [](unsigned char c){ return !std::isspace(c); };
     s.erase(s.begin(), std::find_if(s.begin(), s.end(), notSpace));
@@ -178,12 +199,12 @@ bool LoadBalancer::loadConfig(){
         else if (key == "startingServers") config.startingServers = std::stoi(val); 
 
         else if (key == "rest") config.rest = std::stoi(val);
-        else if (key == "requestGenProb") config.requestGenProb = std::stod(val);
+        else if (key == "requestGenProb") config.requestGenProb = std::stoi(val);
         else if (key == "minRequestTime") config.minRequestTime = std::stoi(val);
         else if (key == "maxRequestTime") config.maxRequestTime = std::stoi(val);
-        else if (key == "genRange") config.genRange = parseIpList(val);
+        else if (key == "genRange") config.genRange = parseIpListV(val);
 
-        else if (key == "range") config.range = parseIpList(val);
+        else if (key == "range") config.range = parseIpListS(val);
         else if (key == "maxPing") config.maxPing = std::stoi(val);
         else if (key == "pingWindow") config.pingWindow = std::stoi(val);
         else if (key == "blockDuration") config.blockDuration = std::stoi(val);
@@ -194,4 +215,23 @@ bool LoadBalancer::loadConfig(){
         else if (key == "clockPeriod") config.clockPeriod = std::stoi(val);
 
     }
+}
+
+Request LoadBalancer::generateRequest(){
+    std::srand(std::time(0));
+    bool flag= false; 
+    if ((std::rand() % 100) < config.requestGenProb) {
+        flag = true; 
+    }
+    if (flag){
+    int range_size = config.genRange.size(); 
+    int random_ip_index_1 = rand() % (range_size + 1);
+    int random_ip_index_2 = rand() % (range_size + 1);
+    int random_time = rand() % (config.maxRequestTime-config.minRequestTime + 1) + config.minRequestTime;
+    JobType type = static_cast<JobType>(rand() % (2));
+    Request req(config.genRange[random_ip_index_1], config.genRange[random_ip_index_1], random_time, type);
+    return req; 
+    }
+    Request null_req;
+    return null_req;
 }
