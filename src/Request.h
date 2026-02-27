@@ -2,16 +2,16 @@
 
 #include <string>
 
-enum JobType{
-    Managemnet, 
-    Proessing,
+enum JobType {
+    Management,
+    Processing,
     Streaming
 };
 
-struct Request{
+struct Request {
     std::string inIP;
-    std::string outIP; 
-    int time; 
+    std::string outIP;
+    int time;
     JobType type;
-    int id; 
+    int id;
 };

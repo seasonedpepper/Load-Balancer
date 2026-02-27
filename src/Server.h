@@ -4,15 +4,14 @@
 
 class Server{
     public: 
-        Server(int id, JobType type);
+        Server(JobType type);
         bool isIdle();
-        JobType type(); 
+        JobType getType(); 
         bool assign(const Request& request);
-        int id(); 
+        bool decrementRequest();
 
 
     private:
-        int id; 
         JobType type; 
         bool idle;
         Request current_request; 
