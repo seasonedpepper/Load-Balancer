@@ -14,29 +14,32 @@
 #include<sstream>
 #include <thread>
 #include <chrono>
+#include <algorithm>
+#include <cctype>
+#include <ctime>
 
 
 struct LBConfig {
     //queue threshold 
-    int lowThreshold  = 50;
-    int highThreshold = 80;
-    int startingServers = 65; 
+    int lowThreshold;
+    int highThreshold;
 
     //request generator 
     int rest = 10;
-    std::vector<std::string> genRange = {"107.115.5.74", "107.115.5.75"};
-    int requestGenProb = 30;
-    int minRequestTime = 1;
-    int maxRequestTime = 10;
+    std::vector<std::string> genRange;
+    int requestGenProb ;
+    int minRequestTime ;
+    int maxRequestTime ;
 
     // Firewall
-    std::set<std::string> range = {"107.115.5.74"};
-    int maxPing = 20;
-    int pingWindow = 50;
-    int blockDuration = 100;
+    std::set<std::string> range;
+    int maxPing ;
+    int pingWindow ;
+    int blockDuration ;
 
     //logging
-    std::string logFile = "events.log";
+    std::string logFile ;
+    std::string statsFile ;
 
     //time 
     int clockPeriod = 0; 
@@ -53,10 +56,16 @@ struct LBStats {
 
 class LoadBalancer{
     public:
-        LoadBalancer(int id, JobType type);
-        bool sendRequestLB(Request req);
+        LoadBalancer(JobType type, int numServers);
+        Request generateRequest(int prob, bool vFlag, std::vector<std::string> valid);
+        bool loadConfig();
+
+        bool sendRequestLB(LoadBalancer& lb);
+        void initQueue(LoadBalancer& LB);
+
+        bool sendRequest();
         bool recieveRequest(Request& req);
-        int tick(std::vector<LoadBalancer> LBs);
+        int tick(std::vector<LoadBalancer*> LBs);
         void setClock(int time); 
         int getTime();
         int addServer(const Server& ser); 
@@ -66,33 +75,27 @@ class LoadBalancer{
         LBStats getStats();
         int queueSize();
         int serverCount();
-        int getNumIdle(); 
+        JobType getType();
 
         void logEvent(std::string msg); 
 
-        bool loadConfig();
-
         bool firewall(Request& req);
 
-        Request generateRequest();
+        void logStats();
+        void logQueue(int fqs, int fqp, int lqs, int lqp);
+        void syncStats(std::vector<LoadBalancer*> LBs);
 
 
     private:
-        int id; 
         JobType type; 
+        int time; 
         std::queue<Request> q;
         std::vector<Server> servers; 
         LBConfig config; 
         LBStats stats;
-        int time; 
-        int numIdle; 
 
         std::map<std::string, int> banned; //ip : when first blocked
         std::map<std::string, std::pair<int, int> > seen; //ip : (count, first seen)
         std::ofstream logFile; 
         std::ifstream configFile; 
-
-
-
-
 };

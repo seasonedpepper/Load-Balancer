@@ -54,6 +54,7 @@
         "fstream": "cpp",
         "iomanip": "cpp",
         "iostream": "cpp",
-        "set": "cpp"
+        "set": "cpp",
+        "charconv": "cpp"
     }
 }

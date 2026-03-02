@@ -2,28 +2,25 @@
 
 #include <string>
 
-enum JobType {
+enum class JobType {
     Management = 2,
     Processing = 1,
     Streaming = 0
+
+
 };
+
+namespace JobUtil{
+    JobType intToJob(int i);
+    std::string jobToString(JobType type);
+    int jobToInt(JobType type);
+}
 
 struct Request {
     std::string inIP;
     std::string outIP;
     int time;
     JobType type;
-    Request::Request(){
-        inIP = "";
-        outIP = "";
-        time = 0;
-        type = JobType::Management; 
-    }
-
-    Request::Request(std::string inIP, std::string outIP, int time, JobType type) : inIP(inIP), outIP(outIP), time(time), type(type){}
-
-    JobType intToJob(int i){
-        return static_cast<JobType>(i);
-    }
-
+    Request();
+    Request(std::string inIP, std::string outIP, int time, JobType type);
 };
