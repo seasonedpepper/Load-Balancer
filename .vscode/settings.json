@@ -55,6 +55,7 @@
         "iomanip": "cpp",
         "iostream": "cpp",
         "set": "cpp",
-        "charconv": "cpp"
+        "charconv": "cpp",
+        "__memory": "cpp"
     }
 }

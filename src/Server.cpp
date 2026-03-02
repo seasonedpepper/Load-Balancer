@@ -1,5 +1,6 @@
 #include "Server.h"
 
+
 Server::Server(JobType type) : type(type), idle(true), current_request() {
 }
 
